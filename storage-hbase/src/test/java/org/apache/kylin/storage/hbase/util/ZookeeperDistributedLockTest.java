@@ -171,7 +171,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         for (int i = 0; i < nClients; i++) {
             threads[i].join();
         }
-        
+
         // verify sum
         assertEquals(0, countSum.get());
         int expectedScore = 0;
@@ -213,9 +213,11 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
 
                 // random lock
                 int lockIdx = rand.nextInt(nLocks);
-                boolean locked = client.lock(lockPaths[lockIdx]);
-                if (locked)
-                    counter += (lockIdx + 1);
+                if (client.isLockedByMe(lockPaths[lockIdx]) == false) {
+                    boolean locked = client.lock(lockPaths[lockIdx]);
+                    if (locked)
+                        counter += (lockIdx + 1);
+                }
 
                 // random unlock
                 try {

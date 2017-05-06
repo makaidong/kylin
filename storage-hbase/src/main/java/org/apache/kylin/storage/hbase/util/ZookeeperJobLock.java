@@ -56,6 +56,11 @@ public class ZookeeperJobLock implements DistributedLock, JobLock {
     }
 
     @Override
+    public boolean isLockedByMe(String lockPath) {
+        return lock.isLockedByMe(lockPath);
+    }
+    
+    @Override
     public void unlock(String lockPath) {
         lock.unlock(lockPath);
     }

@@ -114,6 +114,9 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     final byte[] clientBytes;
 
     private ZookeeperDistributedLock(CuratorFramework curator, String client) {
+        if (client == null)
+            throw new NullPointerException("client must not be null");
+        
         this.curator = curator;
         this.client = client;
         this.clientBytes = client.getBytes(Charset.forName("UTF-8"));
@@ -129,20 +132,16 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         logger.debug(client + " trying to lock " + lockPath);
 
         try {
-            if (client.equals(peekLock(lockPath))) {
-                return true;
-            }
-            
             curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(lockPath, clientBytes);
-
-            if (client.equals(peekLock(lockPath))) {
-                logger.info(client + " acquired lock at " + lockPath);
-                return true;
-            }
         } catch (KeeperException.NodeExistsException ex) {
             logger.debug(lockPath + " is already locked");
         } catch (Exception ex) {
             throw new RuntimeException("Error while " + client + " trying to lock " + lockPath, ex);
+        }
+        
+        if (isLockedByMe(lockPath)) {
+            logger.info(client + " acquired lock at " + lockPath);
+            return true;
         }
         return false;
     }
@@ -194,6 +193,11 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         return peekLock(lockPath) != null;
     }
 
+    @Override
+    public boolean isLockedByMe(String lockPath) {
+        return client.equals(peekLock(lockPath));
+    }
+    
     @Override
     public void unlock(String lockPath) {
         logger.debug(client + " trying to unlock " + lockPath);

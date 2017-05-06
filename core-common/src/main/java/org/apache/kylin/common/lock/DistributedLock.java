@@ -51,6 +51,11 @@ public interface DistributedLock {
     boolean isLocked(String lockPath);
     
     /**
+     * Returns if lock is available at given path.
+     */
+    boolean isLockedByMe(String lockPath);
+    
+    /**
      * Returns the owner of a lock path; returns null if the path is not locked by any one.
      */
     String peekLock(String lockPath);
