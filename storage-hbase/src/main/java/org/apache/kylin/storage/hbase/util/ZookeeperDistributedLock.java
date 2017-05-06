@@ -35,6 +35,7 @@ import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.kylin.common.KylinConfig;
 import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.common.lock.DistributedLockFactory;
+import org.apache.kylin.job.impl.threadpool.DistributedScheduler;
 import org.apache.kylin.job.lock.JobLock;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
@@ -262,6 +263,6 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     }
 
     private String jobEngineLockPath() {
-        return "/kylin/job_engine/lock/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix();
+        return DistributedScheduler.ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/global_engine_lock";
     }
 }

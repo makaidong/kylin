@@ -37,8 +37,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
-    private static Logger logger = LoggerFactory.getLogger(ITZookeeperDistributedLockTest.class);
+public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
+    private static Logger logger = LoggerFactory.getLogger(ZookeeperDistributedLockTest.class);
 
     static ZookeeperDistributedLock.Factory factory;
 
@@ -145,22 +145,23 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
 
         // init watch
         DistributedLock lock = factory.lockForClient("");
-        final AtomicInteger countSum = new AtomicInteger(0);
-        final AtomicInteger scoreSum = new AtomicInteger(0);
+        final AtomicInteger lockCounter = new AtomicInteger(0);
+        final AtomicInteger unlockCounter = new AtomicInteger(0);
+        final AtomicInteger scoreCounter = new AtomicInteger(0);
         Closeable watch = lock.watchLocks(base, Executors.newFixedThreadPool(1), new Watcher() {
 
             @Override
             public void onLock(String lockPath, String client) {
-                countSum.incrementAndGet();
+                lockCounter.incrementAndGet();
                 int cut = lockPath.lastIndexOf("/");
                 int lockId = Integer.parseInt(lockPath.substring(cut + 1)) + 1;
                 int clientId = Integer.parseInt(client);
-                scoreSum.addAndGet(lockId * clientId);
+                scoreCounter.addAndGet(lockId * clientId);
             }
 
             @Override
             public void onUnlock(String lockPath, String client) {
-                countSum.decrementAndGet();
+                unlockCounter.incrementAndGet();
             }
         });
 
@@ -177,15 +178,19 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
             threads[i].join();
         }
 
-        // verify sum
-        assertEquals(0, countSum.get());
-        int expectedScore = 0;
+        // verify counters
+        assertEquals(0, lockCounter.get() - unlockCounter.get());
+        int clientSideScore = 0;
+        int clientSideLocks = 0;
         for (int i = 0; i < nClients; i++) {
-            expectedScore += threads[i].counter * clientIds[i];
+            clientSideScore += threads[i].scoreCounter;
+            clientSideLocks += threads[i].lockCounter;
         }
-        logger.info("client side score is {} and watcher score is {}", expectedScore, scoreSum.get());
+        logger.info("client side locks is {} and watcher locks is {}", clientSideLocks, lockCounter.get());
+        logger.info("client side score is {} and watcher score is {}", clientSideScore, scoreCounter.get());
         // The scores match perfectly on Windows but not on Linux, for unknown reason 
-        // assertEquals(expectedScore, scoreSum.get());
+        assertEquals(clientSideLocks, lockCounter.get());
+        assertEquals(clientSideScore, scoreCounter.get());
         watch.close();
 
         // assert all locks were released
@@ -198,7 +203,8 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         DistributedLock client;
         String[] lockPaths;
         int nLocks;
-        int counter = 0;
+        int lockCounter = 0;
+        int scoreCounter = 0;
 
         ClientThread(DistributedLock client, String[] lockPaths) {
             this.client = client;
@@ -222,8 +228,10 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
                 int lockIdx = rand.nextInt(nLocks);
                 if (client.isLockedByMe(lockPaths[lockIdx]) == false) {
                     boolean locked = client.lock(lockPaths[lockIdx]);
-                    if (locked)
-                        counter += (lockIdx + 1);
+                    if (locked) {
+                        lockCounter++;
+                        scoreCounter += (lockIdx + 1) * Integer.parseInt(client.getClient());
+                    }
                 }
 
                 // random unlock
