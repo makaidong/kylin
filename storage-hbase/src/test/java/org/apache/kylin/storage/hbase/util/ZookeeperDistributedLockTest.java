@@ -64,6 +64,8 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         assertTrue(l.lock(path));
         assertTrue(l.lock(path));
         assertEquals(l.getClient(), l.peekLock(path));
+        assertTrue(l.isLocked(path));
+        assertTrue(l.isLockedByMe(path));
         l.unlock(path);
         assertTrue(l.isLocked(path) == false);
     }
@@ -125,7 +127,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     public void testWatch() throws InterruptedException, IOException {
         // init lock paths
         final String base = "/kylin/test/ZookeeperDistributedLockTest/testWatch/" + rand();
-        final int nLocks = 3;
+        final int nLocks = 4;
         final String[] lockPaths = new String[nLocks];
         for (int i = 0; i < nLocks; i++)
             lockPaths[i] = base + "/" + (i + 1);
@@ -221,6 +223,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
 
                 // random unlock
                 try {
+                    lockIdx = rand.nextInt(nLocks);
                     client.unlock(lockPaths[lockIdx]);
                 } catch (IllegalStateException e) {
                     // ignore
