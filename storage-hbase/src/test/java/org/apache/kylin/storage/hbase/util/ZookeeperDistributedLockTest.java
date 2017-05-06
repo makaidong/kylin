@@ -34,8 +34,11 @@ import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
+    private static Logger logger = LoggerFactory.getLogger(ZookeeperDistributedLockTest.class);
 
     static ZookeeperDistributedLock.Factory factory;
 
@@ -180,6 +183,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         for (int i = 0; i < nClients; i++) {
             expectedScore += threads[i].counter * clientIds[i];
         }
+        logger.info("client side score is {} and watcher score is {}", expectedScore, scoreSum.get());
         assertEquals(expectedScore, scoreSum.get());
         watch.close();
 

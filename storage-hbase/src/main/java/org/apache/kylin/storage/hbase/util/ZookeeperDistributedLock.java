@@ -134,7 +134,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
         try {
             curator.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL).forPath(lockPath, clientBytes);
         } catch (KeeperException.NodeExistsException ex) {
-            logger.debug(lockPath + " is already locked");
+            logger.debug(client + " see " + lockPath + " is already locked");
         } catch (Exception ex) {
             throw new RuntimeException("Error while " + client + " trying to lock " + lockPath, ex);
         }
