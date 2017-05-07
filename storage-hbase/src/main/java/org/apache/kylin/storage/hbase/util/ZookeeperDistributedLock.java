@@ -140,11 +140,14 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             throw new RuntimeException("Error while " + client + " trying to lock " + lockPath, ex);
         }
         
-        if (isLockedByMe(lockPath)) {
+        String lockOwner = peekLock(lockPath);
+        if (client.equals(lockOwner)) {
             logger.info(client + " acquired lock at " + lockPath);
             return true;
+        } else {
+            logger.debug(client + " failed to acquire lock at " + lockPath + ", which is held by " + lockOwner);
+            return false;
         }
-        return false;
     }
 
     @Override
@@ -262,11 +265,7 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     @Override
     public boolean lockJobEngine() {
         String path = jobEngineLockPath();
-        boolean ok = lock(path, 3000);
-        if (!ok) {
-            logger.info(client + " failed to acquire job engine lock which is held by " + peekLock(path));
-        }
-        return false;
+        return lock(path, 3000);
     }
 
     @Override

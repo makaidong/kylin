@@ -25,6 +25,7 @@ import org.apache.kylin.common.lock.DistributedLock;
 import org.apache.kylin.job.lock.JobLock;
 
 /**
+ * A simple delegator to ZookeeperDistributedLock with a default constructor.
  */
 public class ZookeeperJobLock implements DistributedLock, JobLock {
 
