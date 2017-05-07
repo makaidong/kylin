@@ -33,7 +33,6 @@ import org.apache.kylin.common.lock.DistributedLock.Watcher;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,7 +55,6 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         factory.lockForCurrentProcess().purgeLocks(ZK_PFX);
     }
 
-    @Ignore
     @Test
     public void testBasic() {
         DistributedLock l = factory.lockForCurrentThread();
@@ -73,7 +71,6 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         assertTrue(l.isLocked(path) == false);
     }
 
-    @Ignore
     @Test
     public void testErrorCases() {
         DistributedLock c = factory.lockForClient("client1");
@@ -102,7 +99,6 @@ public class ITZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         d.unlock(path);
     }
 
-    @Ignore
     @Test
     public void testLockTimeout() throws InterruptedException {
         final DistributedLock c = factory.lockForClient("client1");
