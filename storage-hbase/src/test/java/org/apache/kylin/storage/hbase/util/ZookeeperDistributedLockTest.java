@@ -33,18 +33,16 @@ import org.apache.kylin.common.lock.DistributedLock.Watcher;
 import org.apache.kylin.common.util.HBaseMetadataTestCase;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
-    private static Logger logger = LoggerFactory.getLogger(ZookeeperDistributedLockTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ZookeeperDistributedLockTest.class);
+    private static final String ZK_PFX = "/kylin/test/ZookeeperDistributedLockTest/" + new Random().nextInt(10000000);
 
     static ZookeeperDistributedLock.Factory factory;
-
-    static String rand() {
-        return "" + new Random().nextInt(10000000);
-    }
 
     @BeforeClass
     public static void setup() throws Exception {
@@ -55,12 +53,14 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     @AfterClass
     public static void after() throws Exception {
         staticCleanupTestMetadata();
+        factory.lockForCurrentProcess().purgeLocks(ZK_PFX);
     }
 
+    @Ignore
     @Test
     public void testBasic() {
         DistributedLock l = factory.lockForCurrentThread();
-        String path = "/kylin/test/ZookeeperDistributedLockTest/testBasic/" + rand();
+        String path = ZK_PFX + "/testBasic";
 
         assertTrue(l.isLocked(path) == false);
         assertTrue(l.lock(path));
@@ -73,11 +73,12 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         assertTrue(l.isLocked(path) == false);
     }
 
+    @Ignore
     @Test
     public void testErrorCases() {
         DistributedLock c = factory.lockForClient("client1");
         DistributedLock d = factory.lockForClient("client2");
-        String path = "/kylin/test/ZookeeperDistributedLockTest/testErrorCases/" + rand();
+        String path = ZK_PFX + "/testErrorCases";
 
         assertTrue(c.isLocked(path) == false);
         assertTrue(d.peekLock(path) == null);
@@ -101,11 +102,12 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
         d.unlock(path);
     }
 
+    @Ignore
     @Test
     public void testLockTimeout() throws InterruptedException {
         final DistributedLock c = factory.lockForClient("client1");
         final DistributedLock d = factory.lockForClient("client2");
-        final String path = "/kylin/test/ZookeeperDistributedLockTest/testLockTimeout/" + rand();
+        final String path = ZK_PFX + "/testLockTimeout";
 
         assertTrue(c.isLocked(path) == false);
         assertTrue(d.peekLock(path) == null);
@@ -129,7 +131,7 @@ public class ZookeeperDistributedLockTest extends HBaseMetadataTestCase {
     @Test
     public void testWatch() throws InterruptedException, IOException {
         // init lock paths
-        final String base = "/kylin/test/ZookeeperDistributedLockTest/testWatch/" + rand();
+        final String base = ZK_PFX + "/testWatch";
         final int nLocks = 4;
         final String[] lockPaths = new String[nLocks];
         for (int i = 0; i < nLocks; i++)

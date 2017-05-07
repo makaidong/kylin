@@ -218,6 +218,18 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
             throw new RuntimeException("Error while " + client + " trying to unlock " + lockPath, ex);
         }
     }
+    
+    @Override
+    public void purgeLocks(String lockPathRoot) {
+        try {
+            curator.delete().guaranteed().deletingChildrenIfNeeded().forPath(lockPathRoot);
+
+            logger.info(client + " purged all locks under " + lockPathRoot);
+            
+        } catch (Exception ex) {
+            throw new RuntimeException("Error while " + client + " trying to purge " + lockPathRoot, ex);
+        }
+    }
 
     @Override
     public Closeable watchLocks(String lockPathRoot, Executor executor, final Watcher watcher) {
@@ -265,4 +277,5 @@ public class ZookeeperDistributedLock implements DistributedLock, JobLock {
     private String jobEngineLockPath() {
         return DistributedScheduler.ZOOKEEPER_LOCK_PATH + "/" + KylinConfig.getInstanceFromEnv().getMetadataUrlPrefix() + "/global_engine_lock";
     }
+
 }

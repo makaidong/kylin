@@ -68,6 +68,11 @@ public interface DistributedLock {
     void unlock(String lockPath) throws IllegalStateException;
 
     /**
+     * Purge all locks under given path. For clean up.
+     */
+    void purgeLocks(String lockPathRoot);
+    
+    /**
      * Watch lock events under given path, notifies the watcher on all lock/unlock events under the given path root.
      * 
      * @return A Closeable that caller must close once the watch is finished.

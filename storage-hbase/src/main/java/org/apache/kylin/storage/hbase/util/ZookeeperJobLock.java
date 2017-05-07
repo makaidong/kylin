@@ -66,6 +66,10 @@ public class ZookeeperJobLock implements DistributedLock, JobLock {
     }
 
     @Override
+    public void purgeLocks(String lockPathRoot) {
+        lock.purgeLocks(lockPathRoot);
+    }
+    @Override
     public Closeable watchLocks(String lockPathRoot, Executor executor, Watcher watcher) {
         return lock.watchLocks(lockPathRoot, executor, watcher);
     }
@@ -79,4 +83,5 @@ public class ZookeeperJobLock implements DistributedLock, JobLock {
     public void unlockJobEngine() {
         lock.unlockJobEngine();
     }
+
 }
